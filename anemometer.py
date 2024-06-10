@@ -9,14 +9,12 @@ import matplotlib as mlb
 from windrose import WindroseAxes
 from matplotlib.colors import Normalize
 from matplotlib.cm import ScalarMappable
-import keyboard
-import sys
 
 async def calypso_subscribe():
 
     async with CalypsoDeviceApi(ble_address = "E3:E0:AA:0D:09:6D", settings = Settings(ble_discovery_timeout=60, ble_connect_timeout=60)) as calypso:    
         
-        await calypso.set_datarate(CalypsoDeviceDataRate.HZ_8)
+        await calypso.set_datarate(CalypsoDeviceDataRate.HZ_4)
         
         def process_reading(reading: CalypsoReading):
         
@@ -25,17 +23,13 @@ async def calypso_subscribe():
             wind_speed = data['wind_speed']
             ax.clear()
             color = cmap(norm(wind_speed))	
-            ax.set_title("Windrose in m/s")
+            ax.set_title("Windspeed is: %.1f m/s" % wind_speed)
             ax.bar([wind_direction], [wind_speed], normed=True, opening=0.8, color = color)
             print(data['wind_speed'], data['wind_direction'])
             plt.pause(0.001)
-            
-
-                
-        
-        plt.ioff()
+         
         norm = Normalize(vmin = 0, vmax = 10)
-        cmap = plt.get_cmap('viridis')
+        cmap = plt.get_cmap('hot')
         sm = ScalarMappable(norm=norm, cmap=cmap)
         
         fig = plt.figure(figsize=(5,5)) 
@@ -45,10 +39,6 @@ async def calypso_subscribe():
         cbar = plt.colorbar(sm, ax=ax, orientation='vertical', pad= 0.1)
   
         await calypso.subscribe_reading(process_reading)
-        
-        if keyboard.is_pressed('q'):
-            running = False
-            sys.exit()
             
         await wait_forever()
 
